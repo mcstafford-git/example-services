@@ -11,6 +11,7 @@ on:
 defaults:
   run:
     working-directory: ./mongodb
+    shell: bash
 
 jobs:
   container-job:
@@ -29,8 +30,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - run: npm ci
-    - run: node client.js
+    - run: declare -p MONGODB_HOST MONGODB_PORT
       env:
         # use mongodb for the host here because we have specified a container for the job.
         # If we were running the job on the VM this would be localhost
@@ -51,8 +51,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - run: npm ci
-    - run: node client.js
+    - run: declare -p MONGODB_HOST MONGODB_PORT
       env:
         # use localhost for the host here because we are running the job on the VM.
         # If we were running the job on in a container this would be mongodb
