@@ -1,0 +1,69 @@
+---
+
+name: MySQL Service Example
+
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+defaults:
+  run:
+    shell: bash
+  env:
+    MYSQL_RANDOM_ROOT_PASSWORD: true
+
+jobs:
+  container-job:
+    runs-on: ubuntu-latest
+
+    # runs all of the steps inside the specified container rather than on the VM
+    # host.  Because of this the network configuration changes from host based
+    # network to a container network.
+    container:
+      image: mysql:latest
+
+    services:
+      mysqldb:
+        image: mysql:latest
+        ports:
+          - 3306
+
+    steps:
+      - uses: actions/checkout@v1
+      - run: declare -p MYSQLDB_HOST MYSQLDB_PORT
+        env:
+          # use mysqldb for the host here because we have specified a container
+          # for the job.  If we were running the job on the VM this would be
+          # localhost
+          MYSQLDB_HOST: mysqldb
+          MYSQLDB_PORT: ${{ job.services.mysqldb.ports[3306] }}
+
+  # Runs all steps on the VM The service containers will use host port binding
+  # instead of container networking so you access them via localhost rather than
+  # the service name
+  vm-job:
+    runs-on: ubuntu-latest
+
+    services:
+      mysqldb:
+        image: mysql:latest
+        ports:
+          # will assign a random free host port
+          - 3306/tcp
+
+    steps:
+      - uses: actions/checkout@v1
+      - run: declare -p MYSQLDB_HOST MYSQLDB_PORT
+        env:
+          # use localhost for the host here because we are running the job on
+          # the VM.  If we were running the job on in a container this would be
+          # mysqldb
+          MYSQLDB_HOST: localhost
+          # get randomly assigned published port
+          MYSQLDB_PORT: ${{ job.services.mysqldb.ports[3306] }}
+
+...
